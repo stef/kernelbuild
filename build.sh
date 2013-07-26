@@ -1,4 +1,6 @@
 #!/usr/bin/ksh
+# (c) 2012, 2013 s@ctrlc.hu
+# License GNU GPLv3+
 # invoke like
 # ./build.sh 3.6.6 https://grsecurity.net/test/grsecurity-2.9.1-3.6.6-201211072001.patch
 kver="$1"
@@ -72,20 +74,24 @@ tar cjvf boot-$lver.txz $bootfiles || die
 sudo chmod o-r /boot/initrd.img-$lver-grsec
 gpg2 --sign boot-$lver.txz || die
 
-echo "uploading backup"
-turl $(cat boot-$lver.txz.gpg | pv -ftrab | sudo -u tahoe tahoe put - kernel:boot-$lver.txz.gpg | tail -1) boot-$lver.txz.gpg >/tmp/bbi.txt
-echo "backup is stored at:"
-cat /tmp/bbi.txt
-publish /tmp/bbi.txt
-rm /tmp/bbi.txt
+[[ "x$USER" == "xstef" ]] && {
+   echo "uploading backup"
+   turl $(cat boot-$lver.txz.gpg | pv -ftrab | sudo -u tahoe tahoe put - kernel:boot-$lver.txz.gpg | tail -1) boot-$lver.txz.gpg >/tmp/bbi.txt
+   echo "backup is stored at:"
+   cat /tmp/bbi.txt
+   publish /tmp/bbi.txt
+   rm /tmp/bbi.txt
+}
 
 # archiving modules
 basedir=$(realpath ..)
 (cd /lib/modules; tar cjvf "$basedir/modules-$lver.txz" "$lver-grsec") || die
 gpg2 --sign ../modules-$lver.txz || die
 
-echo "uploading modules"
-turl $(cat ../modules-$lver.txz.gpg | pv -ftrab | sudo -u tahoe tahoe put - kernel:modules-$lver.txz.gpg | tail -1) modules-$lver.txz.gpg
+[[ "x$USER" == "xstef" ]] && {
+   echo "uploading modules"
+   turl $(cat ../modules-$lver.txz.gpg | pv -ftrab | sudo -u tahoe tahoe put - kernel:modules-$lver.txz.gpg | tail -1) modules-$lver.txz.gpg
+}
 
 echo "archiving kernel tree"
 tar cJvf ../arch/arch-$lver.txz vmlinux vmlinux.o System.map .config || die
